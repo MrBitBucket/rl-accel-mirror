@@ -208,6 +208,7 @@ def main():
                             [pjoin('src','_rl_accel.c')],
                             include_dirs=[],
                         define_macros=[]+debug_macros,
+                        py_limited_api=bool(LAM),
                         library_dirs=[],
                         libraries=[], # libraries to link against
                         extra_compile_args=debug_compile_args,
