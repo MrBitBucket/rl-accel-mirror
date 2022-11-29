@@ -4,6 +4,23 @@
 * see http://hg.reportlab.com/hg-public/rl_accel/file/_rl_accel-license.txt
 * for details.
 */
+#ifdef Py_LIMITED_API
+#	define RLPyBytes_Size PyBytes_Size
+#	define RLPyTuple_SetItem PyTuple_SetItem
+#	define RLPyList_SetItem PyList_SetItem
+#	define RLPyList_Size PyList_Size
+#	define RLPyFloat_AsDouble PyFloat_AsDouble
+#	define RLPyBytes_AsString PyBytes_AsString
+#	define RLPyUnicode_GetLength PyUnicode_GetLength
+#else
+#	define RLPyBytes_Size PyBytes_GET_SIZE
+#	define RLPyTuple_SetItem PyTuple_SET_ITEM
+#	define RLPyList_SetItem PyList_SET_ITEM
+#	define RLPyList_Size PyList_GET_SIZE
+#	define RLPyFloat_AsDouble PyFloat_AS_DOUBLE
+#	define RLPyBytes_AsString PyBytes_AS_STRING
+#	define RLPyUnicode_GetLength PyUnicode_GET_LENGTH
+#endif
 #define PY_SSIZE_T_CLEAN
 #include "Python.h"
 #include <stdlib.h>
@@ -138,7 +155,7 @@ PyObject *_a85_encode(PyObject *module, PyObject *args)
 		EXC_EXIT(PyExc_ValueError,"argument should be " BYTESNAME " or latin1 decodable " STRNAME);
 		}
 	inData = (unsigned char*)PyBytes_AsString(inObj);
-	length = PyBytes_GET_SIZE(inObj);
+	length = RLPyBytes_Size(inObj);
 
 	blocks = length / 4;
 	extra = length % 4;
@@ -231,7 +248,7 @@ PyObject *_a85_decode(PyObject *module, PyObject *args)
 		EXC_EXIT(PyExc_ValueError,"argument should be " BYTESNAME " or latin1 decodable " STRNAME);
 		}
 	inData = (unsigned char*)PyBytes_AsString(inObj);
-	length = (unsigned int)PyBytes_GET_SIZE(inObj);
+	length = (unsigned int)RLPyBytes_Size(inObj);
 	for(k=0,q=inData, p=q+length;q<p && (q=(unsigned char*)strchr((const char*)q,'z'));k++, q++);	/*count 'z'*/
 	length += k*4;
 	tmp = q = (unsigned char*)malloc(length+1);
@@ -309,7 +326,7 @@ static	char *_fp_one(PyObject* module,PyObject *pD)
 	char*	dot;
 	PyObject *cD;
 	if((cD=PyNumber_Float(pD))){
-		d = PyFloat_AS_DOUBLE(cD);
+		d = RLPyFloat_AsDouble(cD);
 		Py_DECREF(cD);
 		}
 	else {
@@ -442,7 +459,7 @@ static PyObject *escapePDF(PyObject *module, PyObject* args)
 		EXC_EXIT(PyExc_ValueError,"argument should be " BYTESNAME " or latin1 decodable " STRNAME);
 		}
 	inData = (unsigned char*)PyBytes_AsString(inObj);
-	length = PyBytes_GET_SIZE(inObj);
+	length = RLPyBytes_Size(inObj);
 	retVal = _escapePDF(inData,length);
 L_exit:
 	Py_XDECREF(_o1);
@@ -562,7 +579,20 @@ static PyObject *_GetAttrString(PyObject *obj, char *name)
 static PyObject *_GetStringBuf(PyObject *obj, const char **buf)
 {
 	PyObject *res;
-
+#ifdef Py_LIMITED_API
+	if(PyUnicode_Check(obj)){
+		res = PyUnicode_AsUTF8String(obj);
+		}
+	else if(PyBytes_Check(obj)){
+		res = obj;
+		Py_INCREF(res);
+		}
+	else{
+		EXC_SET(PyExc_ValueError, "require bytes or unicode object");
+		return NULL;
+		}
+	*buf = PyBytes_AsString(res);
+#else
 	if(PyUnicode_Check(obj)){
 		res = obj;
 		Py_INCREF(res);
@@ -577,6 +607,7 @@ static PyObject *_GetStringBuf(PyObject *obj, const char **buf)
 		EXC_SET(PyExc_ValueError, "require bytes or unicode object");
 		return NULL;
 		}
+#endif
 	return res;
 }
 
@@ -620,8 +651,8 @@ static PyObject *unicode2T1(PyObject *module, PyObject *args, PyObject *kwds)
 		if((_o1 = PyUnicode_AsEncodedString(utext, encStr, NULL))){
 			_o2 = PyTuple_New(2); if(!_o2) EXC_EXIT(PyExc_MemoryError,"create tuple length 2 failed");
 			Py_INCREF(font);
-			PyTuple_SET_ITEM(_o2, 0, font);
-			PyTuple_SET_ITEM(_o2, 1, _o1);
+			RLPyTuple_SetItem(_o2, 0, font);
+			RLPyTuple_SetItem(_o2, 1, _o1);
 			_o1 = NULL;
 			if(PyList_Append(R, _o2)) EXC_EXIT(PyExc_RuntimeError,"could not append to result list");
 			Py_DECREF(_o2); _o2 = NULL;
@@ -652,8 +683,8 @@ static PyObject *unicode2T1(PyObject *module, PyObject *args, PyObject *kwds)
 				Py_DECREF(_o1);
 				_o1 = PyTuple_New(2); if(!_o1) EXC_EXIT(PyExc_MemoryError,"create tuple of length 2 failed");
 				Py_INCREF(font);
-				PyTuple_SET_ITEM(_o1, 0, font);
-				PyTuple_SET_ITEM(_o1, 1, _o2);
+				RLPyTuple_SetItem(_o1, 0, font);
+				RLPyTuple_SetItem(_o1, 1, _o2);
 				_o2 = NULL;
 				if(PyList_Append(R, _o1)) EXC_EXIT(PyExc_RuntimeError,"could not append to result list");
 				Py_DECREF(_o1); _o1 = NULL;
@@ -663,13 +694,13 @@ static PyObject *unicode2T1(PyObject *module, PyObject *args, PyObject *kwds)
 			if(_i2){
 				_o1 = PySequence_GetSlice(utext, i, j); if(!_o1) EXC_EXIT(PyExc_IndexError,"utext[%d:%d] failed",i,j);
 				_o2 = PyTuple_New(2); if(!_o2) EXC_EXIT(PyExc_MemoryError,"create tuple of length 2 failed");
-				PyTuple_SET_ITEM(_o2, 0, _o1);
+				RLPyTuple_SetItem(_o2, 0, _o1);
 				Py_INCREF(fonts);
-				PyTuple_SET_ITEM(_o2, 1, fonts);
-				_o1 = unicode2T1(module,_o2,NULL); if(!_o1) EXC_EXIT(PyExc_RuntimeError,"PyTuple_SET_ITEM(_o2,1,fonts) failed");
+				RLPyTuple_SetItem(_o2, 1, fonts);
+				_o1 = unicode2T1(module,_o2,NULL); if(!_o1) EXC_EXIT(PyExc_RuntimeError,"PyTuple_SetItem(_o2,1,fonts) failed");
 				Py_DECREF(_o2); _o2 = 0;
 				_o3 = PyTuple_New(1); if(!_o3) EXC_EXIT(PyExc_MemoryError,"create tuple of length 1 failed");
-				PyTuple_SET_ITEM(_o3, 0, _o1);
+				RLPyTuple_SetItem(_o3, 0, _o1);
 				_o1 = _GetAttrString(R, "extend"); if(!_o1) EXC_EXIT(PyExc_RuntimeError,"no attriute extend");
 				_o2 = PyObject_CallObject(_o1, _o3); if(!_o2) EXC_EXIT(PyExc_TypeError,"result.extend call failed");
 				Py_DECREF(_o1);
@@ -684,8 +715,8 @@ static PyObject *unicode2T1(PyObject *module, PyObject *args, PyObject *kwds)
 				Py_DECREF(_o2); Py_DECREF(_o3); _o2=_o3=NULL;
 				_o2 = PyTuple_New(2); if(!_o2) EXC_EXIT(PyExc_MemoryError,"create tuple of length 2 failed");
 				_o3 = _GetAttrString(font,"_notdefFont"); if(!_o3) EXC_EXIT(PyExc_AttributeError,"missing _notdefFont");
-				PyTuple_SET_ITEM(_o2, 0, _o3);
-				PyTuple_SET_ITEM(_o2, 1, _o1);
+				RLPyTuple_SetItem(_o2, 0, _o3);
+				RLPyTuple_SetItem(_o2, 1, _o1);
 				Py_INCREF(_o3); _o3=NULL;
 				_o1 = NULL;
 				if(PyList_Append(R, _o2)) EXC_EXIT(PyExc_RuntimeError,"Could not append to result");
@@ -737,7 +768,7 @@ static PyObject *instanceStringWidthT1(PyObject *module, PyObject *args, PyObjec
 
 	if(!PyUnicode_Check(text)){
 		if(PyBytes_Check(text)){
-			_o1=PyUnicode_Decode(PyBytes_AS_STRING(text), PyBytes_GET_SIZE(text), encStr,"strict");
+			_o1=PyUnicode_Decode(RLPyBytes_AsString(text), RLPyBytes_Size(text), encStr,"strict");
 			if(!_o1) EXC_EXIT(PyExc_ValueError,"cannot decode text argument");
 			Py_DECREF(text);
 			text = _o1;
@@ -750,22 +781,22 @@ static PyObject *instanceStringWidthT1(PyObject *module, PyObject *args, PyObjec
 
 	_o3 = PyList_New(1); if(!_o3) EXC_EXIT(PyExc_MemoryError,"PyList_New(1) failed");
 	Py_INCREF(self);
-	PyList_SET_ITEM(_o3, 0, self);
+	RLPyList_SetItem(_o3, 0, self);
 	_o2 = _GetAttrString(self, "substitutionFonts"); if(!_o2) EXC_EXIT(PyExc_RuntimeError,"missing substitutionFonts");
 	_o1 = PyNumber_Add(_o3, _o2); if(!_o1) EXC_EXIT(PyExc_RuntimeError,"substitution addition failed");
 	Py_DECREF(_o3); _o3 = 0;
 	Py_DECREF(_o2); _o2 = NULL;
 	_o3 = PyTuple_New(2); if(!_o3) EXC_EXIT(PyExc_MemoryError,"PyTuple_New(2) failed");
 	Py_INCREF(text);
-	PyTuple_SET_ITEM(_o3, 0, text);
-	PyTuple_SET_ITEM(_o3, 1, _o1);
+	RLPyTuple_SetItem(_o3, 0, text);
+	RLPyTuple_SetItem(_o3, 1, _o1);
 	_o1 = NULL;
 	_o2 = unicode2T1(module,_o3,NULL); if(!_o2) EXC_EXIT(PyExc_RuntimeError,"unicode2T1 call failed");
 	Py_DECREF(_o3); _o3 = NULL;
 	L = _o2;
 	_o2 = NULL;
 
-	n = PyList_GET_SIZE(L);
+	n = RLPyList_Size(L);
 
 	for(s=i=0;i<n;++i){
 		_o1 = PyList_GetItem(L,i); if(!_o1) EXC_EXIT(PyExc_IndexError,"L[%d] failed",i);
@@ -788,7 +819,7 @@ static PyObject *instanceStringWidthT1(PyObject *module, PyObject *args, PyObjec
 		_o1 = _o2 = NULL;
 
 		m = PyBytes_Size(t);
-		b = (unsigned char*)PyBytes_AS_STRING(t);
+		b = (unsigned char*)RLPyBytes_AsString(t);
 
 		for(j=0;j<m;++j){
 			_i1 = (long)(b[j]);
@@ -848,7 +879,7 @@ static PyObject *instanceStringWidthTTF(PyObject *module, PyObject *args, PyObje
 		_o1 = _GetAttrString(text, "decode"); if(!_o1) EXC_EXIT(PyExc_AttributeError,"missing attribute decode");
 		_o3 = PyTuple_New(1); if(!_o3) EXC_EXIT(PyExc_MemoryError,"PyTuple_New(1) failed");
 		Py_INCREF(encoding);
-		PyTuple_SET_ITEM(_o3, 0, encoding);
+		RLPyTuple_SetItem(_o3, 0, encoding);
 		_o2 = PyObject_CallObject(_o1, _o3); if(!_o2) EXC_EXIT(PyExc_RuntimeError,"call of decode attribute failed");
 		Py_DECREF(_o1);
 		Py_DECREF(_o3); _o1 = _o3 = NULL;
@@ -866,7 +897,7 @@ static PyObject *instanceStringWidthTTF(PyObject *module, PyObject *args, PyObje
 	if(PyErr_Occurred()) EXC_EXIT(PyExc_RuntimeError,"float() failed");
 	Py_DECREF(_o3);	_o3=NULL;
 
-	n = PyUnicode_GET_LENGTH(text);
+	n = RLPyUnicode_GetLength(text);
 	b = PyUnicode_AsUCS4Copy(text);
 	if(!b) EXC_EXIT(PyExc_MemoryError,"memory failed for UCS4Copy");
 
@@ -899,7 +930,6 @@ L_exit:
 	goto L_OK;
 }
 
-#define HAVE_BOX
 #ifdef HAVE_BOX
 /*Box start**************/
 typedef struct {
@@ -943,9 +973,10 @@ static int Box_set_character(BoxObject *self, PyObject *value)
 		}
 	else {
 		char *v = PyBytes_AsString(value);
+		Py_ssize_t vL;
 		if(!v) return -1;
-		if(PyBytes_GET_SIZE(value)!=1){
-			EXC_SET(PyExc_AttributeError,"Bad size %d('%s') for attribute character",PyBytes_GET_SIZE(value),v);
+		if((vL=RLPyBytes_Size(value))!=1){
+			EXC_SET(PyExc_AttributeError,"Bad size %d('%s') for attribute character",vL,v);
 			return -1;
 			}
 		self->character = v[0];
@@ -1141,11 +1172,11 @@ static PyObject *BoxList_specialmeth(PyObject *self, PyObject *args, PyObject *k
 		if(self==NULL) self = Py_None;
 		if(kw==NULL) kw = Py_None;
 		Py_INCREF(self);
-		PyTuple_SET_ITEM(result, 0, self);
+		RLPyTuple_SetItem(result, 0, self);
 		Py_INCREF(args);
-		PyTuple_SET_ITEM(result, 1, args);
+		RLPyTuple_SetItem(result, 1, args);
 		Py_INCREF(kw);
-		PyTuple_SET_ITEM(result, 2, kw);
+		RLPyTuple_SetItem(result, 2, kw);
 		}
 	return result;
 }
