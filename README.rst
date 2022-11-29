@@ -1,14 +1,5 @@
-PyRXP is a Python language wrapper around the excellent RXP parser, a validating, namespace-aware
-XML parser written in C.
+rl_accel is a package containing the ReportLab accelerator module
 
-*A quick example:*
-::
-    >>> import pyRXPU
-    >>> rxp=pyRXPU.Parser()
-    >>> rxp('<a>some text</a>')
-    ((u'a', None, [u'some text'], None)))
+_rl_accel
 
-
-RXP is based on the W3C XML 1.0 recommendation of 10th February 1998
-and the Namespaces recommendation of 14th January 1999.  Deviations
-from these recommendations should probably be considered as bugs.
+which can be used to speedup the reportlab.lib.rl_accel.py functions
