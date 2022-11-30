@@ -1,1 +1,1 @@
-include README.rst _rl_accel-license.txt test/* src/*
+include README.* LICENSE.txt test/* src/*
