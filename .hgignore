@@ -49,3 +49,5 @@ syntax: regexp
 ^[Ss]hare/
 ^[Ss]elenium/
 ^\.?py\d+/
+^\.git/
+^\.gitignore$
