@@ -1,0 +1,15 @@
+/reportlab.egg-info/
+/build/
+/lib/
+/lib64/
+/bin/
+/include/
+/.hg/
+/.hgignore
+/.hgeol
+/.hgtags
+/tmp/
+/dist/
+__pycache__
+/tests/test*.pdf
+/rl_accel.egg-info/
