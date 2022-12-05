@@ -1,17 +1,38 @@
 from setuptools import setup, Extension
-from wheel.bdist_wheel import bdist_wheel
+from wheel.bdist_wheel import bdist_wheel, get_abi_tag
 from os.path import join as pjoin
-import sys
+import sys, os, sysconfig
+
+def make_la_info():
+    '''compute limited api and abi info'''
+    global py_limited_kwds, cpstr
+    cpstr = get_abi_tag()
+    if cpstr.startswith("cp"):
+        lav = '0x03070000'
+        cpstr = 'cp37'
+        if sys.platform == "darwin":
+            machine = sysconfig.get_platform().split('-')[-1]
+            if machine=='arm64' or os.environ.get('ARCHFLAGS','')=='-arch arm64':
+                #according to cibuildwheel/github M1 supports pythons >= 3.8
+                lav = '0x03080000'
+                cpstr = 'cp38'
+        py_limited_kwds = dict(
+                                define_macros=[("Py_LIMITED_API", lav)],
+                                py_limited_api=True,
+                                )
+    else:
+        py_limited_kwds = {}
+
+make_la_info()
 
 class bdist_wheel_abi3(bdist_wheel):
     def get_tag(self):
         python, abi, plat = super().get_tag()
 
         if python.startswith("cp"):
-            # on CPython, our wheels are abi3 and compatible back to 3.6
-            return "cp37", "abi3", plat
-
-        return python, abi, plat
+            abi = 'abi3'
+            python = cpstr
+        return python,abi,plat
 
 def get_version():
     fn = pjoin('src','_rl_accel.c')
@@ -30,8 +51,7 @@ setup(
         Extension(
             "_rl_accel",
             sources=[pjoin('src','_rl_accel.c')],
-            define_macros=[("Py_LIMITED_API", "0x03070000")],
-            py_limited_api=True,
+            **py_limited_kwds,
         )
     ],
     name="rl_accel",
