@@ -43,7 +43,7 @@
 #ifndef min
 #	define min(a,b) ((a)<(b)?(a):(b))
 #endif
-#define VERSION "0.81"
+#define VERSION "0.9.0"
 #define MODULE "_rl_accel"
 
 #define STRNAME "str"

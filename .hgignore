@@ -34,13 +34,14 @@ syntax: glob
 *.scc
 __pycache__
 build
+*.sublime-project
 
 syntax: regexp
 ^MANIFEST$
 ^test/
 ^tmp/
 ^dist/.*\.(?:whl|zip|tar\.gz)
-^rl_accel.egg-info/.*
+^.*\.egg-info/.*
 ^bin/
 ^local/
 ^[Ii]nclude/
