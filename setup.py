@@ -1,7 +1,7 @@
 from setuptools import setup, Extension
 from wheel.bdist_wheel import bdist_wheel, get_abi_tag
 from os.path import join as pjoin
-import sys, os, sysconfig
+import sys, os, sysconfig, re
 
 def make_la_info():
     '''compute limited api and abi info'''
@@ -34,17 +34,11 @@ class bdist_wheel_abi3(bdist_wheel):
             python = cpstr
         return python,abi,plat
 
-def get_version():
-    fn = pjoin('src','_rl_accel.c')
-    try:
-        with open(fn,'r') as _:
-            for l in _.readlines():
-                if l.startswith('#define'):
-                    l = l.split()
-                    if l[1]=='VERSION':
-                        return eval(l[2],{})
-    except:
-        raise ValueError('Cannot determine _rl_accel Version')
+def getVersionFromCCode(fn):
+    with open(fn,'r') as _:
+        code = _.read()
+    tag = re.search(r'^#define\s+VERSION\s+"([^"]*)"',code,re.M)
+    return tag and tag.group(1) or ''
 
 setup(
     ext_modules=[
@@ -55,8 +49,8 @@ setup(
         )
     ],
     name="rl_accel",
-    version=get_version(),
-    license="BSD license (see _rl_accel-licens.txt for details), Copyright (c) 2000-2022, ReportLab Inc.",
+    version=getVersionFromCCode(pjoin('src','_rl_accel.c')),
+    license="BSD license (see LICENSE.txt for details), Copyright (c) 2000-2022, ReportLab Inc.",
     description="Acclerator for ReportLab",
     long_description="""This is an accelerator module for the ReportLab Toolkit Open Source Python library for generating PDFs and graphics.""",
     author="Andy Robinson, Robin Becker, the ReportLab team and the community",
