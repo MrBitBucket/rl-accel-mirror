@@ -2,7 +2,10 @@ from setuptools import setup, Extension
 try:
     from setuptools.command.bdist_wheel import bdist_wheel, get_abi_tag
 except ImportError:
-    from wheel.bdist_wheel import bdist_wheel, get_abi_tag
+    try:
+        from wheel.bdist_wheel import bdist_wheel, get_abi_tag
+    except ImportError:
+        from wheel._bdist_wheel import bdist_wheel, get_abi_tag
 from os.path import join as pjoin
 import sys, os, sysconfig, re
 
