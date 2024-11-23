@@ -2,7 +2,7 @@
 set -e
 
 #change to suit your python versions/locations
-PYTHONS=(~/bin/python39 ~/bin/python314)
+PYTHONS=(${EARLYPYTHON:-~/bin/python39} ${LATEPYTHON:-~/bin/python314})
 
 uname -a
 mkdir -p tmp
@@ -27,15 +27,19 @@ for py in ${PYTHONS[@]}; do
 	echo "############################################################"
 done
 
-for bpy in 39 314; do
-   rm -f _rl_accel.abi3.so
-   if [ ${bpy} == 39 ]; then
-	   ln -s build/lib.linux-x86_64-3.9/_rl_accel.abi3.so .
-	else
-	   ln -s build/lib.linux-x86_64-cpython-314/_rl_accel.abi3.so .
-	fi
-	for pyv in 39 314; do
-		pyd=".py$pyv"
+for i in .py*; do
+	bpy=${i#.py}
+   	rm -f _rl_accel.abi3.so
+	case ${bpy} in
+		(37|38|39)
+			ln -s build/lib.linux-x86_64-3.${bpy#3}/_rl_accel.abi3.so .
+			;;
+		(*)
+	   		ln -s build/lib.linux-x86_64-cpython-${bpy}/_rl_accel.abi3.so .
+			;;
+	esac
+	for pyd in .py*; do
+		pyv=${pyd#.py}
 		(
 		export PYTHONPATH="$(pwd)"
 		. ${pyd}/bin/activate
