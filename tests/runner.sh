@@ -4,6 +4,7 @@ set -e
 #change to suit your python versions/locations
 PYTHONS=(~/bin/python39 ~/bin/python314)
 
+uname -a
 mkdir -p tmp
 cd tmp
 rm -rf ./rl-accel-mirror
@@ -36,12 +37,15 @@ for bpy in 39 314; do
 	for pyv in 39 314; do
 		pyd=".py$pyv"
 		(
+		export PYTHONPATH="$(pwd)"
 		. ${pyd}/bin/activate
+		echo
 		echo "#############################################################"
 		echo "extension built with $bpy running tests/testrc.py with python$pyv"
+		echo "_rl_accel.abi3.so-->$(readlink _rl_accel.abi3.so)"
+		echo "$(${pyd}/bin/python -c'import sys;print(sys.version)')"
 		echo "#############################################################"
 		${pyd}/bin/python tests/testrc.py
 		)
 	done
 done
-
