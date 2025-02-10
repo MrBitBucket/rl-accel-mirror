@@ -2,7 +2,7 @@
 set -e
 
 #change to suit your python versions/locations
-PYTHONS=(${EARLYPYTHON:-~/bin/python39} ${LATEPYTHON:-~/bin/python314})
+PYTHONS=(${EARLYPYTHON:-~/bin/python312} ${LATEPYTHON:-~/bin/python313})
 
 uname -a
 mkdir -p tmp
@@ -10,6 +10,8 @@ cd tmp
 rm -rf ./rl-accel-mirror
 git clone https://github.com/MrBitBucket/rl-accel-mirror
 
+TESTPY=testcs.py
+cp ../runner.sh ../${TESTPY} rl-accel-mirror/tests
 cd rl-accel-mirror
 
 for py in ${PYTHONS[@]}; do
@@ -24,6 +26,7 @@ for py in ${PYTHONS[@]}; do
 	echo
 	echo "############################################################"
 	echo "created ${pyd} and made _rl_accel extension with python${pyv}"
+	echo "$(python -c'import sys;print(sys.version)')"
 	echo "############################################################"
 done
 
@@ -45,11 +48,11 @@ for i in .py*; do
 		. ${pyd}/bin/activate
 		echo
 		echo "#############################################################"
-		echo "extension built with $bpy running tests/testrc.py with python$pyv"
+		echo "extension built with $bpy running tests/$TESTPY with python$pyv"
 		echo "_rl_accel.abi3.so-->$(readlink _rl_accel.abi3.so)"
 		echo "$(${pyd}/bin/python -c'import sys;print(sys.version)')"
 		echo "#############################################################"
-		${pyd}/bin/python tests/testrc.py
+		${pyd}/bin/python tests/${TESTPY}
 		)
 	done
 done

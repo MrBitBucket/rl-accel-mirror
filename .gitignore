@@ -136,3 +136,4 @@ dmypy.json
 /dist/
 __pycache__
 /tests/test*.pdf
+/tests/tmp/

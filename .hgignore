@@ -52,3 +52,4 @@ syntax: regexp
 ^\.?py\d+/
 ^\.git/
 ^\.gitignore$
+^tests/tmp/.*$
