@@ -80,35 +80,7 @@ jobs:
       - name: Build wheels
         run: python -m cibuildwheel --output-dir wheelhouse
         env:
-          #cp313-macosx_universal2
-          CIBW_BUILD: >
-            cp313-macosx_x86_64
-            cp313-macosx_arm64
-            cp313-win_amd64
-            cp313-win32
-            cp313-win_arm64
-            cp313-manylinux_x86_64
-            cp313-manylinux_i686
-            cp313-musllinux_x86_64
-            cp313-musllinux_i686
-            cp313-manylinux_aarch64
-            cp313-manylinux_ppc64le
-            cp313-manylinux_s390x
-            cp313-manylinux_armv7l
-            cp313-musllinux_aarch64
-            cp313-musllinux_ppc64le
-            cp313-musllinux_s390x
-            cp313-musllinux_armv7l
-          #CIBW_ARCHS_LINUX: all #auto aarch64 #needs quemu setup
-          #CIBW_ARCHS_MACOS: x86_64 arm64
-          #CIBW_REPAIR_WHEEL_COMMAND_MACOS: >
-          #  if [ "{delocate_archs}" = "arm64" ]; then
-          #    DYLD_LIBRARY_PATH=$RL_CACHE_DIR/m1stuff/m1stuff/opt/homebrew/lib delocate-listdeps {wheel} &&
-          #    DYLD_LIBRARY_PATH=$RL_CACHE_DIR/m1stuff/m1stuff/opt/homebrew/lib delocate-wheel --require-archs {delocate_archs} -w {dest_dir} {wheel}
-          #  else
-          #    delocate-listdeps {wheel} &&
-          #    delocate-wheel --require-archs {delocate_archs} -w {dest_dir} {wheel}
-          #  fi
+          CIBW_BUILD: cp313*
       - name: upload wheels
         env:
           CITOOLS_USER: "${{secrets.CITOOLS_USER}}"
@@ -118,10 +90,10 @@ jobs:
           python -mrl_ci_tools upload-caches --subdir='${{ github.event.repository.name }}' --verbosity=1 ./wheelhouse/*.whl
           python -mrl_ci_tools env-upload
 
-      - uses: actions/upload-artifact@v4
-        with:
-          name: "${{ github.event.repository.name }}-lin-win-mac"
-          path: ./wheelhouse/*.whl
+      #- uses: actions/upload-artifact@v4
+      #  with:
+      #    name: "${{ github.event.repository.name }}-${{ matrix.os }}-${{ matrix.cibw_archs }}"
+      #    path: ./wheelhouse/*.whl
   email:
     #if: github.event.repository.name == 'rl-accel-mirror'
     name: email
