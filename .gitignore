@@ -133,6 +133,7 @@ dmypy.json
 /.hgeol
 /.hgtags
 /tmp/
+/tests/tmp/
 /dist/
 __pycache__
 /tests/test*.pdf

@@ -1,5 +1,5 @@
 /*
-* Copyright ReportLab Europe Ltd. 2000-2022
+* Copyright ReportLab Europe Ltd. 2000-2025
 * licensed under the same terms as the ReportLab Toolkit
 * see http://hg.reportlab.com/hg-public/rl_accel/file/_rl_accel-license.txt
 * for details.
@@ -25,6 +25,8 @@
 #include "Python.h"
 #include <stdlib.h>
 #include <math.h>
+//UNSAFE see https://discuss.python.org/t/c-stable-api-py-ssize-t-clean-error/80159/6
+PyAPI_FUNC(int) _PyArg_ParseTuple_SizeT(PyObject *args, const char *format, ...);
 #define DEFERRED_ADDRESS(A) 0
 #if defined(__GNUC__) || defined(sun) || defined(_AIX) || defined(__hpux)
 #	define STRICMP strcasecmp
@@ -43,7 +45,7 @@
 #ifndef min
 #	define min(a,b) ((a)<(b)?(a):(b))
 #endif
-#define VERSION "0.9.0"
+#define VERSION "0.9.1"
 #define MODULE "_rl_accel"
 
 #define STRNAME "str"
@@ -507,8 +509,8 @@ static PyObject *ttfonts_calcChecksum(PyObject *module, PyObject* args)
 	unsigned long n;
 	int leftover;
 
-
-	if (!PyArg_ParseTuple(args, "s#:calcChecksum", &data, &dataLen)) return NULL;
+	//UNSAFE see https://discuss.python.org/t/c-stable-api-py-ssize-t-clean-error/80159/6
+	if (!_PyArg_ParseTuple_SizeT(args, "s#:calcChecksum", &data, &dataLen)) return NULL;
 	EndPtr = data + (dataLen & ~3);
 
 	/*full ULONGs*/
